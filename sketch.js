@@ -1,8 +1,8 @@
 var serial; // variable to hold an instance of the serialport library
 var portName = '/dev/tty.usbmodem14101'; //rename to the name of your port
-var inData1;
-var inData2;
-
+var inData = []; //creates array with data
+let isOn = false; // defines inital value for the button
+let btnX, btnY; // defines x and y locations for the button
 
 function setup() {
     serial = new p5.SerialPort();       // make a new instance of the serialport library
@@ -12,11 +12,15 @@ function setup() {
     serial.on('data', serialEvent);     // callback for when new data arrives
     serial.on('error', serialError);    // callback for errors
     serial.on('close', portClose);      // callback for the port closing
-
-    console.log("muffin");
     serial.list();                      // list the serial ports
     serial.open(portName);              // open a serial port
-    createCanvas(1200, 800);
+    createCanvas(1200, 800);            // creates background size
+
+
+    // credit to turtlefingers00@gmail.com sample p5 code. creates button shape
+    btnX = width/2;
+    btnY = height/2;
+    radius = 50;
 }
 
 // get the list of ports:
@@ -46,31 +50,59 @@ function portClose() {
 
 function serialEvent() {
   if (serial.available()) {
-  	var inLine = serial.readLine();
-    if (inLine != "") {
-      inData1 = inLine;
-      console.log("got back " + inData1);
+    var datastring = serial.readLine(); // readin some serial
+    var newarray;
+    try {
+      newarray = JSON.parse(datastring); // can we parse the serial
+      if (typeof newarray == 'object') {
+        inData = newarray;
+      }
+      console.log("got back " + datastring);
+      } catch(err) {
+      // got something that's not a json
     }
   }
-  if (serial.available()) {
-  	var inLine = serial.readLine();
-    if (inLine != "") {
-      inData2 = inLine;
-      console.log("got back " + inData2);
-    }
-  }
-
-
 }
 
-function keyPressed() {
-    //console.log("writing key");
-    serial.write(key);
-}
 
 function draw() {
-    background(0);
-    fill(255);
-    text("inData1: " + inData1, 30, 30);
-    text("inData2: " + inData2, 30, 50);
+    background(127); // sets background color
+    fill(255); // sets text color
+    text("photoresistor: " + inData[0], 200, 30); // gets first set of data from array from arduino
+    text("thermistor: " + inData[1], 200, 150); // gets second set of data from array from arduino
+
+
+    // credit to turtlefingers00@gmail.com sample p5 code
+
+    textAlign(CENTER,CENTER); // aligns and centers text
+    textSize(40); // sets text size
+
+    if(isOn){
+      fill("white"); // if button is on, sets fill to white
+      serial.write(255); // turns LED on
+    }
+    else{
+      fill("black"); // if button is off, sets fill to black
+      serial.write(0); // turns LED off
+    }
+
+    noStroke();
+    ellipse(width/2,height/2,radius*2,radius*2);
+
+    if(isOn){
+      fill("black");
+      text("ON",btnX,btnY); // if button is on, makes text say on
+    }
+    else{
+      fill("white");
+      text("OFF",btnX,btnY); // if button is OFF, makes text say on
+    }
+  }
+
+
+function mouseClicked(){
+  let mouseWithinButton = (dist(btnX,btnY,mouseX,mouseY)<radius)// defines variable as when mouse is clicked within radious of btnX and btnY
+  if(mouseWithinButton){
+    isOn = !isOn; // if clicked again, turn it off
+  }
 }

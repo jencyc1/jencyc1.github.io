@@ -25,7 +25,7 @@ void setup() {
   pinMode(photoresistor, INPUT); // defines photoresistor as input
   pinMode(remotepin, INPUT); // defines remotepin as input
 
-    // calibrate during the first five seconds - from Arduino example code
+    // calibrate during the first five seconds - all callibration code is from Arduino example code
   while (millis() < 5000) {
     sensorValue = analogRead(photoresistor);
 
